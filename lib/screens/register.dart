@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:perpus_flutter/config/config.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,11 +22,9 @@ class RegisterScreenState extends State<RegisterScreen> {
   String selectedGender = 'Laki-laki'; // default value
 
   Future<void> register() async {
-    final String apiUrl = 'http://192.168.1.13:8000/api/register';
-
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
+      final response = await http.post(        
+        Uri.parse(Config.baseUrl('register')),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

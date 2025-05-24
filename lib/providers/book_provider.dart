@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
+import 'package:perpus_flutter/config/config.dart';
 import '../models/book.dart';
+import 'package:logger/logger.dart';
 
 class BookProvider with ChangeNotifier {
   List<Book> _books = [];
   bool _isLoading = false;
   String? _errorMessage;
+  var logger = Logger();
 
   List<Book> get books => _books;
   bool get isLoading => _isLoading;
@@ -19,9 +21,11 @@ class BookProvider with ChangeNotifier {
 
     try {
       final response = await http.get(
-        Uri.parse('http://192.168.1.22:8000/api/koleksi'),
+        Uri.parse(Config.baseUrl('koleksi')),
         headers: {'Accept': 'application/json'},
       );
+      final data = jsonDecode(response.body);
+      logger.i("📥 Response Koleksi buku: $data");
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body);

@@ -23,6 +23,7 @@ class _BukuScreenState extends State<BukuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bookProvider = Provider.of<BookProvider>(context);
     return Scaffold(
       appBar: CustomAppBar(),
       backgroundColor: const Color(0xFFF8FAFC),
@@ -65,20 +66,10 @@ class _BukuScreenState extends State<BukuScreen> {
                           crossAxisSpacing: 15,
                           mainAxisSpacing: 20,
                           children:
-                              provider.books
+                              bookProvider.books
                                   .map(
-                                    (book) => BookCard(
-                                      title: book.title,
-                                      image: book.image,
-                                      isbn: book.isbn,
-                                      description: book.description,
-                                      author: book.author,
-                                      publisher: book.publisher,
-                                      publicationYear: book.publicationYear,
-                                      synopsis: book.synopsis,
-                                      genre: book.genre,
-                                    ),
-                                  )
+                                    (book) => BookCard(book: book),
+                                  ) // Menggunakan objek Book
                                   .toList(),
                         ),
                       );

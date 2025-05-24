@@ -4,6 +4,7 @@ import 'package:perpus_flutter/components/bottom_nav_screen.dart';
 import 'package:perpus_flutter/screens/usulan.dart';
 import 'package:provider/provider.dart';
 import 'package:perpus_flutter/providers/usulan_provider.dart';
+import 'package:perpus_flutter/components/riwayat_usulan_card.dart';
 
 class RiwayatUsulan extends StatefulWidget {
   const RiwayatUsulan({super.key});
@@ -29,135 +30,194 @@ class _RiwayatUsulanState extends State<RiwayatUsulan> {
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: CustomAppBar(),
       body: SafeArea(
-        child: Stack(
-          children: [
-            // LIST VIEW
-            Container(
-              // padding: const EdgeInsets.only(top: 72),              
-              child:
-                  usulanProvider.isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : usulanProvider.riwayatUsulan.isEmpty
-                      ? const Center(child: Text('Tidak ada data usulan.'))
-                      : RefreshIndicator(
-                        onRefresh: () async {
-                          await Provider.of<UsulanProvider>(
-                            context,
-                            listen: false,
-                          ).fetchRiwayatUsulan();
-                        },
-                        child: ListView.builder(                          
-                          padding: EdgeInsets.only(top: 80, left: 16, right: 16),
-                          itemCount: usulanProvider.riwayatUsulan.length,
-                          itemBuilder: (context, index) {
-                            final usulan = usulanProvider.riwayatUsulan[index];
-                            return Card(
-                              color: const Color(0xFFF1F5F9),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
+        child: usulanProvider.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: () async {
+                  await Provider.of<UsulanProvider>(
+                    context,
+                    listen: false,
+                  ).fetchRiwayatUsulan();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Row: Search bar + Hapus Semua button
+                      Row(
+                        children: [
+                          // Expanded Search bar
+                          Expanded(
+                            child: Material(
+                              elevation: 3,
+                              shadowColor: Colors.black26,
+                              borderRadius: BorderRadius.circular(12),
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  hintText: "Cari usulan ...",
+                                  prefixIcon: const Icon(Icons.search),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                                onSubmitted: (value) {
+                                  Provider.of<UsulanProvider>(
+                                    context,
+                                    listen: false,
+                                  ).fetchRiwayatUsulan();
+                                },
                               ),
-                              margin: const EdgeInsets.only(bottom: 16),
-                              elevation: 2,
-                              child: Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child:
-                                              usulan.bookImage != null
-                                                  ? Image.network(
-                                                    'http://192.168.1.15:8000/storage/${usulan.bookImage}',
-                                                    height: 110,
-                                                    width: 80,
-                                                    fit: BoxFit.cover,
-                                                  )
-                                                  : Container(
-                                                    height: 110,
-                                                    width: 80,
-                                                    color: Colors.grey[300],
-                                                    child: const Icon(
-                                                      Icons.book,
-                                                      size: 40,
-                                                    ),
-                                                  ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Judul : ${usulan.bookTitle}",
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                              Text("ISBN : ${usulan.isbn}"),
-                                              Text(
-                                                "Pengarang : ${usulan.author}",
-                                              ),
-                                              Text(
-                                                "Kategori : ${usulan.genre}",
-                                              ),
-                                              Text(
-                                                "Tanggal usulan : ${usulan.date}",
-                                              ),
-                                              // Text("Status : ${usulan.status}"),
-                                              Text("Status : diproses"),
-                                              const SizedBox(height: 8),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          // Hapus Semua Button
+                          if (usulanProvider.riwayatUsulan.isNotEmpty)
+                            ElevatedButton.icon(                              
+                              label: const Text("Hapus Semua"),
+                              onPressed: () async {
+                                bool confirmed = await showDialog(
+                                  context: context,
+                                  builder: (_) => AlertDialog(
+                                    title: const Text('Konfirmasi'),
+                                    content: const Text(
+                                      'Yakin ingin menghapus SEMUA usulan? Tindakan ini tidak dapat dibatalkan.',
                                     ),
-                                  ],
+                                    actions: [
+                                      TextButton(
+                                        child: const Text('Batal'),
+                                        onPressed: () => Navigator.pop(context, false),
+                                      ),
+                                      TextButton(
+                                        child: const Text(
+                                          'Hapus Semua',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                        onPressed: () => Navigator.pop(context, true),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (confirmed) {
+                                  showDialog(
+                                    context: context,
+                                    barrierDismissible: false,
+                                    builder: (context) => const AlertDialog(
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          CircularProgressIndicator(),
+                                          SizedBox(height: 16),
+                                          Text('Sedang menghapus semua usulan...'),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+
+                                  try {
+                                    await usulanProvider.deleteAllUsulan();
+
+                                    if (!mounted) return;
+                                    Navigator.of(context).pop();
+
+                                    if (usulanProvider.success) {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          title: const Text('Berhasil'),
+                                          content: const Text(
+                                            'Semua usulan berhasil dihapus',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              child: const Text('OK'),
+                                              onPressed: () => Navigator.pop(context),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    } else if (usulanProvider.errorMessage != null) {
+                                      await showDialog(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          title: const Text('Gagal'),
+                                          content: Text(usulanProvider.errorMessage!),
+                                          actions: [
+                                            TextButton(
+                                              child: const Text('OK'),
+                                              onPressed: () => Navigator.pop(context),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (!mounted) return;
+                                    Navigator.of(context).pop();
+
+                                    await showDialog(
+                                      context: context,
+                                      builder: (_) => AlertDialog(
+                                        title: const Text('Error'),
+                                        content: const Text(
+                                          'Terjadi kesalahan yang tidak diketahui',
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text('OK'),
+                                            onPressed: () => Navigator.pop(context),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red[700],
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                        ],
                       ),
-            ),
-
-            // FLOATING SEARCH BAR (opsional, belum aktif)
-            Positioned(
-              left: 16,
-              right: 16,
-              top: 16,
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(12),
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "Cari usulan ...",
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
+                      const SizedBox(height: 12),
+                      // List or empty message
+                      Expanded(
+                        child: usulanProvider.riwayatUsulan.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'Tidak ada data usulan.',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: EdgeInsets.zero,
+                                itemCount: usulanProvider.riwayatUsulan.length,
+                                itemBuilder: (context, index) {
+                                  final usulan = usulanProvider.riwayatUsulan[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: UsulanCard(usulan: usulan),
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
                   ),
-                  onSubmitted: (value) {
-                    Provider.of<UsulanProvider>(
-                      context,
-                      listen: false,
-                    ).fetchRiwayatUsulan();
-                  },
                 ),
               ),
-            ),
-          ],
-        ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {

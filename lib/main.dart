@@ -12,6 +12,8 @@ import 'screens/register.dart';
 import 'screens/dashboard.dart';
 import 'screens/splash_screen.dart';
 import 'screens/notifikasi.dart';
+import 'screens/detail_usulan.dart';
+import 'screens/edit_usulan.dart';
 // import 'package:perpus_flutter/pages/bottom_nav_screen.dart';
 
 void main() {
@@ -20,8 +22,7 @@ void main() {
       providers: [
         ChangeNotifierProvider(create: (_) => BookProvider()),
         ChangeNotifierProvider(create: (_) => UsulanProvider()),
-        ChangeNotifierProvider(create: (_) =>  UserProvider()),
-
+        ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: MyApp(),
     ),
@@ -54,6 +55,8 @@ class MyApp extends StatelessWidget {
         '/informasi': (context) => Informasi(),
         '/profil': (context) => Profil(),
         '/notifikasi': (context) => NotifikasiScreen(),
+        '/detailUsulan': (context) => DetailUsulan(),
+        '/editUsulan': (context) => UpdateUsulan(),
       },
       // home: BottomNavScreen(),
     );

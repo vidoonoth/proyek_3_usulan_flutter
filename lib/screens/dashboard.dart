@@ -52,6 +52,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bookProvider = Provider.of<BookProvider>(context);
     return FutureBuilder<String?>(
       future: _getToken(),
       builder: (context, snapshot) {
@@ -117,23 +118,13 @@ class DashboardScreenState extends State<DashboardScreen> {
                             return SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
-                                children:
-                                    provider.books.map((book) {
+                                children:                                
+                                    bookProvider.books.map((book) {
                                       return Padding(
                                         padding: const EdgeInsets.only(
                                           right: 10.0,
                                         ),
-                                        child: BookCard(
-                                          title: book.title,
-                                          image: book.image,
-                                          isbn: book.isbn,
-                                          description: book.description,
-                                          author: book.author,
-                                          publisher: book.publisher,
-                                          publicationYear: book.publicationYear,
-                                          synopsis: book.synopsis,
-                                          genre: book.genre,
-                                        ),
+                                        child: BookCard(book: book),
                                       );
                                     }).toList(),
                               ),

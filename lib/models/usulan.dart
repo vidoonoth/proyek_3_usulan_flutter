@@ -1,3 +1,5 @@
+// import 'package:perpus_flutter/config/config.dart';
+
 class UsulanModel {
   final int id;
   final String bookTitle;
@@ -28,7 +30,6 @@ class UsulanModel {
     required this.createdAt,
     required this.updatedAt,
   });
-
   factory UsulanModel.fromJson(Map<String, dynamic> json) {
     return UsulanModel(
       id: json['id'],
@@ -39,7 +40,8 @@ class UsulanModel {
       publicationYear: json['publicationYear'],
       publisher: json['publisher'],
       date: json['date'],
-      bookImage: json['bookImage'], // bisa null, jadi nullable
+      // Jangan proses URL di sini jika backend sudah mengembalikan URL lengkap
+      bookImage: json['bookImage'], // langsung ambil nilai dari JSON
       status: json['status'],
       userId: json['user_id'],
       createdAt: DateTime.parse(json['created_at']),

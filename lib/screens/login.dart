@@ -4,6 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:logger/logger.dart';
+import 'dart:io';
+import 'package:perpus_flutter/config/config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -16,6 +19,7 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final ValueNotifier<bool> isLoading = ValueNotifier(false);
+  var logger = Logger();
 
   Future<void> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
@@ -27,7 +31,7 @@ class LoginPageState extends State<LoginPage> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://192.168.1.13:8000/api/login'),
+        Uri.parse(Config.baseUrl('login')),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -40,22 +44,36 @@ class LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final token = data['token'];
+        final userId = data['user']['id']; // ambil user ID
 
-        if (token != null) {
+        if (token != null && userId != null) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('token', token);
+          await prefs.setInt('user_id', userId); // simpan user ID juga
+          logger.i("✅ Token: $token");
+          logger.i("✅ User ID: $userId");
 
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/dashboard');
           }
         } else {
-          _showSnackBar("Login berhasil, tetapi token tidak ditemukan.");
+          _showSnackBar(
+            "Login berhasil, tetapi token atau user ID tidak ditemukan.",
+          );
         }
       } else {
-         print('Response body: ${response.body}');
-       _showErrorDialog("Email / password yang Anda masukkan salah.");
+        logger.i('Response body: ${response.body}');
+        _showErrorDialog("Email / password yang Anda masukkan salah.");
+      }
+    } on SocketException catch (e) {
+      logger.e(
+        "🚫 SocketException: Tidak dapat terhubung ke server. Pesan: $e",
+      );
+      if (mounted) {
+        _showSnackBar("Tidak dapat terhubung ke server. Periksa koneksi Anda.");
       }
     } catch (e) {
+      logger.e("❌ Exception lain: $e");
       if (mounted) _showSnackBar("Terjadi kesalahan: $e");
     } finally {
       if (mounted) isLoading.value = false;
@@ -67,36 +85,33 @@ class LoginPageState extends State<LoginPage> {
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
   }
+
   void _showErrorDialog(String message) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: const [
-            Icon(Icons.error_outline, color: Colors.red),
-            SizedBox(width: 8),
-            Text("Login Gagal"),
-          ],
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(color: Colors.black87),
-        ),
-        actions: [
-          TextButton(
-            child: const Text(
-              "OK",
-              style: TextStyle(color: Colors.red),
-            ),
-            onPressed: () => Navigator.of(context).pop(),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
-        ],
-      );
-    },
-  );
-}
+          title: Row(
+            children: const [
+              Icon(Icons.error_outline, color: Colors.red),
+              SizedBox(width: 8),
+              Text("Login Gagal"),
+            ],
+          ),
+          content: Text(message, style: const TextStyle(color: Colors.black87)),
+          actions: [
+            TextButton(
+              child: const Text("OK", style: TextStyle(color: Colors.red)),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,3 +1,5 @@
+// import 'package:perpus_flutter/config/config.dart';
+
 class Book {
   final String title;
   final String genre;
@@ -20,6 +22,7 @@ class Book {
     required this.synopsis,
     this.image,
   });
+
   factory Book.fromJson(Map<String, dynamic> json) {
     return Book(
       title: json['bookTitle'] ?? 'Tanpa Judul',
@@ -30,7 +33,7 @@ class Book {
       publisher: json['publisher'] ?? '-',
       description: json['description'] ?? '-',
       synopsis: json['synopsis'] ?? '-',
-      image: json['bookImage'], // sudah URL lengkap dari API
+      image: json['bookImage'],
     );
   }
 }

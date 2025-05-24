@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:perpus_flutter/config/config.dart';
 
 class UserProvider with ChangeNotifier {
   String? name;
@@ -21,7 +22,7 @@ class UserProvider with ChangeNotifier {
     final token = prefs.getString('token');
 
     final response = await http.get(
-      Uri.parse('http://192.168.1.22:8000/api/profile'),
+      Uri.parse(Config.baseUrl('profile')),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
 
