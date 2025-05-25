@@ -1,12 +1,129 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:perpus_flutter/providers/user_provider.dart';
 
-class EditProfil extends StatelessWidget {
-  const EditProfil({super.key});
+class EditProfil extends StatefulWidget {
+  final Map<String, dynamic> userData;
+
+  const EditProfil({super.key, required this.userData});
+
+  @override
+  EditProfilState createState() => EditProfilState();
+}
+
+class EditProfilState extends State<EditProfil> {
+  late TextEditingController _usernameController;
+  late TextEditingController _nameController;
+  late TextEditingController _emailController;
+  late TextEditingController _nikController;
+  late TextEditingController _phoneController;
+  late TextEditingController _genderController;
+  late TextEditingController _passwordController;
+  
+  String? _nikError;
+  String? _phoneError;
+
+  @override
+  void initState() {
+    super.initState();
+    _usernameController = TextEditingController(text: widget.userData['username'] ?? '');
+    _nameController = TextEditingController(text: widget.userData['name'] ?? '');
+    _emailController = TextEditingController(text: widget.userData['email'] ?? '');
+    _nikController = TextEditingController(text: widget.userData['nik'] ?? '');
+    _phoneController = TextEditingController(text: widget.userData['numberphone'] ?? '');
+    _genderController = TextEditingController(text: widget.userData['gender'] ?? '');
+    _passwordController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _nikController.dispose();
+    _phoneController.dispose();
+    _genderController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  bool _validateFields() {
+    bool isValid = true;
+    
+    // Validate NIK (must be 16 digits)
+    if (_nikController.text.length != 16 || !_nikController.text.isNumeric()) {
+      setState(() {
+        _nikError = 'NIK harus 16 digit angka';
+      });
+      isValid = false;
+    } else {
+      setState(() {
+        _nikError = null;
+      });
+    }
+    
+    // Validate Phone Number (must be 13 digits)
+    if (_phoneController.text.length != 13 || !_phoneController.text.isNumeric()) {
+      setState(() {
+        _phoneError = 'Nomor telepon harus 13 digit angka';
+      });
+      isValid = false;
+    } else {
+      setState(() {
+        _phoneError = null;
+      });
+    }
+    
+    return isValid;
+  }
+
+  Future<void> _saveProfile() async {
+    if (!_validateFields()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan perbaiki data yang invalid'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    
+    final updateData = {
+      'username': _usernameController.text,
+      'name': _nameController.text,
+      'email': _emailController.text,
+      'nik': _nikController.text,
+      'numberphone': _phoneController.text,
+      'gender': _genderController.text,
+      if (_passwordController.text.isNotEmpty) 'password': _passwordController.text,
+    };
+
+    final success = await userProvider.updateProfile(updateData);
+    
+    if (success) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Profil berhasil diperbarui'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal memperbarui profil'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF60A5FA),
+      backgroundColor: const Color(0xFF60A5FA),
       body: SafeArea(
         child: Column(
           children: [
@@ -18,7 +135,7 @@ class EditProfil extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () => Navigator.pop(context),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFFF8FAFC),
+                      backgroundColor: const Color(0xFFF8FAFC),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -91,19 +208,35 @@ class EditProfil extends StatelessWidget {
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.all(20),
                     child: Column(
-                      spacing: 5,
                       children: [
-                        _buildTextField("Username", "Gracia"),
-                        _buildTextField("Nama lengkap", "Gracia Victory"),
-                        _buildTextField("Nik", "45393429319931311"),
-                        _buildTextField("Nomor telepon", "08393429319931311"),
-                        _buildTextField("Jenis kelamin", "Perempuan"),
-                        _buildTextField("Password", "xxxxxxxxxxxx"),
+                        _buildTextField("Username", _usernameController),
+                        _buildTextField("Nama lengkap", _nameController),
+                        _buildTextField("Email", _emailController),
+                        _buildTextFieldWithValidation(
+                          "NIK", 
+                          _nikController,
+                          errorText: _nikError,
+                          maxLength: 16,
+                          keyboardType: TextInputType.number,
+                        ),
+                        _buildTextFieldWithValidation(
+                          "Nomor telepon", 
+                          _phoneController,
+                          errorText: _phoneError,
+                          maxLength: 13,
+                          keyboardType: TextInputType.phone,
+                        ),
+                        _buildTextField("Jenis kelamin", _genderController),
+                        _buildTextField(
+                          "Password (kosongkan jika tidak ingin mengubah)", 
+                          _passwordController, 
+                          isPassword: true,
+                        ),
                         const SizedBox(height: 30),
                         ElevatedButton(
-                          onPressed: () {},
+                          onPressed: _saveProfile,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF60A5FA),
+                            backgroundColor: const Color(0xFF60A5FA),
                             padding: const EdgeInsets.symmetric(
                               horizontal: 130,
                               vertical: 15,
@@ -129,20 +262,21 @@ class EditProfil extends StatelessWidget {
     );
   }
 
-  Widget _buildTextField(String label, String initialValue) {
+  Widget _buildTextField(String label, TextEditingController controller, {bool isPassword = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: TextField(
+        controller: controller,
+        obscureText: isPassword,
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: Color.fromARGB(246, 0, 0, 0)),
-          hintText: initialValue,
           filled: true,
-          fillColor: Colors.blueGrey[50], // slate50
+          fillColor: Colors.blueGrey[50],
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(
               color: Colors.blueGrey[100]!,
-            ), // slate100 border
+            ),
             borderRadius: BorderRadius.circular(15),
           ),
           focusedBorder: OutlineInputBorder(
@@ -152,5 +286,61 @@ class EditProfil extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildTextFieldWithValidation(
+    String label, 
+    TextEditingController controller, {
+    String? errorText,
+    int? maxLength,
+    TextInputType? keyboardType,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          TextField(
+            controller: controller,
+            maxLength: maxLength,
+            keyboardType: keyboardType,
+            decoration: InputDecoration(
+              labelText: label,
+              labelStyle: const TextStyle(color: Color.fromARGB(246, 0, 0, 0)),
+              filled: true,
+              fillColor: Colors.blueGrey[50],
+              enabledBorder: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Colors.blueGrey[100]!,
+                ),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderSide: BorderSide(color: Colors.blueGrey[200]!),
+                borderRadius: BorderRadius.circular(15),
+              ),
+              errorText: errorText,
+            ),
+          ),
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                errorText,
+                style: const TextStyle(
+                  color: Colors.red,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+extension NumericValidation on String {
+  bool isNumeric() {
+    return double.tryParse(this) != null;
   }
 }

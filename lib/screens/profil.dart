@@ -81,7 +81,7 @@ class _ProfilState extends State<Profil> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              userProvider.name ?? '-',
+                              userProvider.username ?? '-',
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -98,7 +98,7 @@ class _ProfilState extends State<Profil> {
                     SizedBox(height: 10),
 
                     // Informasi pengguna
-                    _buildInfoRow("Username", userProvider.name ?? '-'),
+                    _buildInfoRow("Nama lengkap", userProvider.name ?? '-'),
                     _buildInfoRow("Email", userProvider.email ?? '-'),
                     _buildInfoRow("NIK", userProvider.nik ?? '-'),
                     _buildInfoRow(
@@ -112,12 +112,23 @@ class _ProfilState extends State<Profil> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
+                        // Di dalam _ProfilState, ubah tombol edit menjadi:
                         ElevatedButton.icon(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const EditProfil(),
+                                builder:
+                                    (context) => EditProfil(
+                                      userData: {
+                                        'username': userProvider.username,
+                                        'name': userProvider.name,
+                                        'email': userProvider.email,
+                                        'nik': userProvider.nik,
+                                        'numberphone': userProvider.numberphone,
+                                        'gender': userProvider.gender,
+                                      },
+                                    ),
                               ),
                             );
                           },

@@ -73,6 +73,7 @@ flutter:
     - assets/google_logo.svg.png
     - assets/user_avatar.jpg
     - assets/alfin.jpg
+    - assets/book.gif
     - assets/perpus_logo.svg
     - assets/pengusulan_login.svg
     - assets/welcome.svg
