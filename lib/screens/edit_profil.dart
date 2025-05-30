@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:perpus_flutter/providers/user_provider.dart';
@@ -22,6 +24,7 @@ class EditProfilState extends State<EditProfil> {
   String? _gender;
   String? _nikError;
   String? _phoneError;
+  File? _selectedImage;
 
   @override
   void initState() {
@@ -39,7 +42,13 @@ class EditProfilState extends State<EditProfil> {
     _phoneController = TextEditingController(
       text: widget.userData['numberphone'] ?? '',
     );
-    _gender = widget.userData['gender'] ?? 'Laki-laki';
+    // Perbaiki inisialisasi _gender agar selalu valid
+    final gender = widget.userData['gender']?.toString().toLowerCase();
+    if (gender == 'perempuan') {
+      _gender = 'Perempuan';
+    } else {
+      _gender = 'Laki-laki';
+    }
     _passwordController = TextEditingController();
   }
 
@@ -98,18 +107,21 @@ class EditProfilState extends State<EditProfil> {
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
-    final updateData = {
-      'username': _usernameController.text,
-      'name': _nameController.text,
-      'email': _emailController.text,
-      'nik': _nikController.text,
-      'numberphone': _phoneController.text,
-      'gender': _gender,
-      if (_passwordController.text.isNotEmpty)
-        'password': _passwordController.text,
-    };
+    final updateData = <String, dynamic>{};
+    if (_usernameController.text.isNotEmpty) updateData['username'] = _usernameController.text;
+    if (_nameController.text.isNotEmpty) updateData['name'] = _nameController.text;
+    if (_emailController.text.isNotEmpty) updateData['email'] = _emailController.text;
+    if (_nikController.text.isNotEmpty) updateData['nik'] = _nikController.text;
+    if (_phoneController.text.isNotEmpty) updateData['numberphone'] = _phoneController.text;
+    if (_gender != null && _gender!.isNotEmpty) updateData['gender'] = _gender;
+    if (_passwordController.text.isNotEmpty) updateData['password'] = _passwordController.text;
 
-    final success = await userProvider.updateProfile(updateData);
+    bool success;
+    if (_selectedImage != null) {
+      success = await userProvider.updateProfileWithImage(updateData, _selectedImage!);
+    } else {
+      success = await userProvider.updateProfile(updateData);
+    }
 
     if (success) {
       Navigator.pop(context);
@@ -126,6 +138,16 @@ class EditProfilState extends State<EditProfil> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() {
+        _selectedImage = File(picked.path);
+      });
     }
   }
 
@@ -177,24 +199,33 @@ class EditProfilState extends State<EditProfil> {
             Stack(
               alignment: Alignment.bottomRight,
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 60,
                   backgroundColor: Colors.grey,
-                  child: Icon(Icons.person, size: 60, color: Colors.white),
+                  backgroundImage: _selectedImage != null
+                      ? FileImage(_selectedImage!)
+                      : (widget.userData['profile_image_url'] != null
+                          ? NetworkImage(widget.userData['profile_image_url'])
+                          : null) as ImageProvider?,
+                  child: (_selectedImage == null && widget.userData['profile_image_url'] == null)
+                      ? Icon(Icons.person, size: 60, color: Colors.white)
+                      : null,
                 ),
-
                 Positioned(
                   bottom: 4,
                   right: 4,
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF60A5FA),
-                      shape: BoxShape.circle,
-                    ),
-                    padding: const EdgeInsets.all(6),
-                    child: const Icon(
-                      Icons.camera_alt,
-                      color: Color(0xFFF8FAFC),
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF60A5FA),
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Color(0xFFF8FAFC),
+                      ),
                     ),
                   ),
                 ),

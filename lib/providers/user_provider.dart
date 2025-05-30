@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -130,6 +131,67 @@ class UserProvider with ChangeNotifier {
           stackTrace: StackTrace.current
         );
         
+        return false;
+      }
+    } catch (e) {
+      errorMessage = 'Connection error: ${e.toString()}';
+      logger.e('Exception during profile update',
+        error: e,
+        stackTrace: StackTrace.current
+      );
+      return false;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateProfileWithImage(Map<String, dynamic> data, File imageFile) async {
+    try {
+      isLoading = true;
+      errorMessage = null;
+      notifyListeners();
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token');
+
+      var uri = Uri.parse(Config.baseUrl('profile/$id'));
+      var request = http.MultipartRequest('POST', uri); // HARUS POST!
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers['Accept'] = 'application/json';
+      request.fields['_method'] = 'PUT'; // Spoofing agar diterima Laravel
+
+      // Tambahkan field lain
+      data.forEach((key, value) {
+        if (value != null && value.toString().isNotEmpty) {
+          request.fields[key] = value.toString();
+        }
+      });
+
+      // Tambahkan file
+      request.files.add(await http.MultipartFile.fromPath('profileImage', imageFile.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      logger.d('Update response status: ${response.statusCode}');
+      logger.d('Update response body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        logger.i('Profile updated successfully');
+        await fetchUserData();
+        return true;
+      } else {
+        final errorData = json.decode(response.body);
+        errorMessage = errorData['message'] ?? 'Update failed: ${response.statusCode}';
+        logger.e('Profile update failed',
+          error: {
+            'statusCode': response.statusCode,
+            'errorData': errorData,
+            'sentData': data,
+          },
+          stackTrace: StackTrace.current
+        );
         return false;
       }
     } catch (e) {
