@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,13 +20,18 @@ class SplashScreenState extends State<SplashScreen>
     super.initState();
 
     // Inisialisasi animasi
-    _controller =
-        AnimationController(vsync: this, duration: Duration(milliseconds: 1000));
-    _slideAnimation =
-        Tween<Offset>(begin: Offset(0, 0.5), end: Offset.zero).animate(
-            CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-    _fadeAnimation =
-        Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 1000),
+    );
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0, 0.5),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     _controller.forward(); // Mulai animasi
 
@@ -56,16 +62,22 @@ class SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/book.gif'),            
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Column(
+      backgroundColor: Colors.white,
+      body: Center(        
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              spacing: 5,
+              children: [
+                SvgPicture.asset(
+                  'assets/perpus_logo.svg',
+                  width: 60,
+                  height: 60,
+                ),                
+                Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
@@ -87,9 +99,9 @@ class SplashScreenState extends State<SplashScreen>
                     ),
                   ],
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

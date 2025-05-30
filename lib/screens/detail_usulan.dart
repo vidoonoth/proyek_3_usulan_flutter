@@ -110,54 +110,7 @@ class DetailUsulan extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back),
                   onPressed: () => Navigator.pop(context),
                 ),
-              ),
-
-              // Tombol hapus
-              Positioned(
-                top: 0,
-                right: 0,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final confirmed = await showDialog(
-                      context: context,
-                      builder:
-                          (_) => AlertDialog(
-                            title: const Text('Konfirmasi'),
-                            content: const Text(
-                              'Yakin ingin menghapus usulan ini?',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Batal'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Hapus'),
-                              ),
-                            ],
-                          ),
-                    );
-                    if (confirmed) {
-                      // Lakukan aksi hapus
-                      // await Provider.of<UsulanProvider>(context, listen: false).deleteUsulan(usulan.id);
-                      Navigator.pop(context);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red[400],
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: const Text('hapus'),
-                ),
-              ),
+              ),           
             ],
           ),
         ),

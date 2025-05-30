@@ -8,8 +8,8 @@ import 'package:perpus_flutter/components/bottom_nav_screen.dart';
 import 'package:perpus_flutter/components/info_card.dart';
 import 'package:perpus_flutter/components/book_card.dart';
 import 'package:perpus_flutter/components/app_bar.dart';
-import 'package:perpus_flutter/components/search_custom.dart';
-import 'package:perpus_flutter/components/category_chips.dart';
+// import 'package:perpus_flutter/components/search_custom.dart';
+// import 'package:perpus_flutter/components/category_chips.dart';
 import 'package:perpus_flutter/screens/usulan.dart';
 import 'package:perpus_flutter/models/book.dart';
 
@@ -98,11 +98,7 @@ class DashboardScreenState extends State<DashboardScreen> {
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
                         ),
-                      ),
-                      const SizedBox(height: 16),
-                      SearchBarCustom(),
-                      const SizedBox(height: 16),
-                      CategoryChipsCustom(),
+                      ),                                                                                        
                       const SizedBox(height: 16),
                       Consumer<BookProvider>(
                         builder: (context, provider, child) {

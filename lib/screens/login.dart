@@ -20,6 +20,7 @@ class LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   final ValueNotifier<bool> isLoading = ValueNotifier(false);
   var logger = Logger();
+  bool _obscurePassword = true; // State for password visibility
 
   Future<void> login(String email, String password) async {
     if (email.isEmpty || password.isEmpty) {
@@ -81,9 +82,7 @@ class LoginPageState extends State<LoginPage> {
   }
 
   void _showSnackBar(String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _showErrorDialog(String message) {
@@ -116,196 +115,195 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 100),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Logo dan Judul
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SvgPicture.asset(
-                    'assets/perpus_logo.svg',
-                    width: 60,
-                    height: 60,
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Perpustakaan',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF2196F3), Color(0xFFBBDEFB)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Card(       
+              color: Colors.white,       
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logo dan Judul
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/perpus_logo.svg',
+                          width: 60,
+                          height: 60,
                         ),
-                      ),
-                      Text(
-                        'Indramayu',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 50),
-
-              // Input Email
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email atau nomor telepon',
-                  hintText: 'Masukkan email atau nomor telepon',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                ),
-              ),
-              const SizedBox(height: 15),
-
-              // Input Password
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  hintText: 'Masukkan password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // Teks Daftar dan Lupa Password
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pushNamed(context, '/register'),
-                    child: Text(
-                      "Belum punya akun? Daftar",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.blueAccent,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      "Lupa kata sandi?",
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.blueAccent,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 10),
-
-              // Tombol Login
-              ValueListenableBuilder<bool>(
-                valueListenable: isLoading,
-                builder: (context, loading, child) {
-                  return SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed:
-                          loading
-                              ? null
-                              : () => login(
-                                emailController.text,
-                                passwordController.text,
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Perpustakaan',
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2196F3),
                               ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                            ),
+                            Text(
+                              'Indramayu',
+                              style: GoogleFonts.poppins(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2196F3),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Email input
+                    TextField(
+                      controller: emailController,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.email),
+                        labelText: 'Email',
+                        hintText: 'Masukkan email',
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: BorderSide(color: Colors.grey[100]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF2196F3),
+                          ),
                         ),
                       ),
-                      child:
-                          loading
-                              ? const CircularProgressIndicator(
-                                color: Colors.white,
-                              )
-                              : Text(
-                                'Masuk',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
                     ),
-                  );
-                },
-              ),
 
-              const SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
-              // Divider "atau login dengan"
-              Row(
-                children: [
-                  Expanded(
-                    child: Divider(thickness: 1, color: Colors.grey.shade300),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      "atau login dengan",
-                      style: GoogleFonts.poppins(color: Colors.grey),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(thickness: 1, color: Colors.grey.shade300),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Tombol Login Google
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {}, // Tambahkan fungsi login Google jika ada
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey[200],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Login dengan",
-                        style: TextStyle(color: Colors.black),
+                    // Password input with toggle
+                    TextField(
+                      controller: passwordController,
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
+                        prefixIcon: const Icon(Icons.lock),
+                        labelText: 'Password',
+                        hintText: 'Masukkan password',
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: BorderSide(color: const Color.fromARGB(255, 209, 209, 209)),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF2196F3),
+                          ),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                       ),
-                      const SizedBox(width: 10),
-                      Image.asset('assets/google_logo.svg.png', height: 20),
-                    ],
-                  ),
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Tombol login
+                    ValueListenableBuilder<bool>(
+                      valueListenable: isLoading,
+                      builder: (context, loading, child) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: loading
+                                ? null
+                                : () => login(
+                                      emailController.text,
+                                      passwordController.text,
+                                    ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: loading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                : Text(
+                                    'Masuk',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Navigasi Register
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Belum punya akun? ",
+                          style: GoogleFonts.poppins(fontSize: 14),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pushNamed(context, '/register'),
+                          child: Text(
+                            "Daftar",
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blueAccent,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),

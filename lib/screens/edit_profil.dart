@@ -17,21 +17,29 @@ class EditProfilState extends State<EditProfil> {
   late TextEditingController _emailController;
   late TextEditingController _nikController;
   late TextEditingController _phoneController;
-  late TextEditingController _genderController;
   late TextEditingController _passwordController;
-  
+
+  String? _gender;
   String? _nikError;
   String? _phoneError;
 
   @override
   void initState() {
     super.initState();
-    _usernameController = TextEditingController(text: widget.userData['username'] ?? '');
-    _nameController = TextEditingController(text: widget.userData['name'] ?? '');
-    _emailController = TextEditingController(text: widget.userData['email'] ?? '');
+    _usernameController = TextEditingController(
+      text: widget.userData['username'] ?? '',
+    );
+    _nameController = TextEditingController(
+      text: widget.userData['name'] ?? '',
+    );
+    _emailController = TextEditingController(
+      text: widget.userData['email'] ?? '',
+    );
     _nikController = TextEditingController(text: widget.userData['nik'] ?? '');
-    _phoneController = TextEditingController(text: widget.userData['numberphone'] ?? '');
-    _genderController = TextEditingController(text: widget.userData['gender'] ?? '');
+    _phoneController = TextEditingController(
+      text: widget.userData['numberphone'] ?? '',
+    );
+    _gender = widget.userData['gender'] ?? 'Laki-laki';
     _passwordController = TextEditingController();
   }
 
@@ -42,14 +50,13 @@ class EditProfilState extends State<EditProfil> {
     _emailController.dispose();
     _nikController.dispose();
     _phoneController.dispose();
-    _genderController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   bool _validateFields() {
     bool isValid = true;
-    
+
     // Validate NIK (must be 16 digits)
     if (_nikController.text.length != 16 || !_nikController.text.isNumeric()) {
       setState(() {
@@ -61,9 +68,10 @@ class EditProfilState extends State<EditProfil> {
         _nikError = null;
       });
     }
-    
+
     // Validate Phone Number (must be 13 digits)
-    if (_phoneController.text.length != 13 || !_phoneController.text.isNumeric()) {
+    if (_phoneController.text.length != 13 ||
+        !_phoneController.text.isNumeric()) {
       setState(() {
         _phoneError = 'Nomor telepon harus 13 digit angka';
       });
@@ -73,7 +81,7 @@ class EditProfilState extends State<EditProfil> {
         _phoneError = null;
       });
     }
-    
+
     return isValid;
   }
 
@@ -89,19 +97,20 @@ class EditProfilState extends State<EditProfil> {
     }
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
-    
+
     final updateData = {
       'username': _usernameController.text,
       'name': _nameController.text,
       'email': _emailController.text,
       'nik': _nikController.text,
       'numberphone': _phoneController.text,
-      'gender': _genderController.text,
-      if (_passwordController.text.isNotEmpty) 'password': _passwordController.text,
+      'gender': _gender,
+      if (_passwordController.text.isNotEmpty)
+        'password': _passwordController.text,
     };
 
     final success = await userProvider.updateProfile(updateData);
-    
+
     if (success) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -170,8 +179,10 @@ class EditProfilState extends State<EditProfil> {
               children: [
                 const CircleAvatar(
                   radius: 60,
-                  backgroundImage: AssetImage('assets/alfin.jpg'),
+                  backgroundColor: Colors.grey,
+                  child: Icon(Icons.person, size: 60, color: Colors.white),
                 ),
+
                 Positioned(
                   bottom: 4,
                   right: 4,
@@ -213,23 +224,23 @@ class EditProfilState extends State<EditProfil> {
                         _buildTextField("Nama lengkap", _nameController),
                         _buildTextField("Email", _emailController),
                         _buildTextFieldWithValidation(
-                          "NIK", 
+                          "NIK",
                           _nikController,
                           errorText: _nikError,
                           maxLength: 16,
                           keyboardType: TextInputType.number,
                         ),
                         _buildTextFieldWithValidation(
-                          "Nomor telepon", 
+                          "Nomor telepon",
                           _phoneController,
                           errorText: _phoneError,
                           maxLength: 13,
                           keyboardType: TextInputType.phone,
                         ),
-                        _buildTextField("Jenis kelamin", _genderController),
+                        _buildGenderDropdown(),
                         _buildTextField(
-                          "Password (kosongkan jika tidak ingin mengubah)", 
-                          _passwordController, 
+                          "Password (kosongkan jika tidak ingin mengubah)",
+                          _passwordController,
                           isPassword: true,
                         ),
                         const SizedBox(height: 30),
@@ -262,7 +273,11 @@ class EditProfilState extends State<EditProfil> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool isPassword = false}) {
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool isPassword = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15),
       child: TextField(
@@ -274,9 +289,7 @@ class EditProfilState extends State<EditProfil> {
           filled: true,
           fillColor: Colors.blueGrey[50],
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: Colors.blueGrey[100]!,
-            ),
+            borderSide: BorderSide(color: Colors.blueGrey[100]!),
             borderRadius: BorderRadius.circular(15),
           ),
           focusedBorder: OutlineInputBorder(
@@ -289,7 +302,7 @@ class EditProfilState extends State<EditProfil> {
   }
 
   Widget _buildTextFieldWithValidation(
-    String label, 
+    String label,
     TextEditingController controller, {
     String? errorText,
     int? maxLength,
@@ -310,9 +323,7 @@ class EditProfilState extends State<EditProfil> {
               filled: true,
               fillColor: Colors.blueGrey[50],
               enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Colors.blueGrey[100]!,
-                ),
+                borderSide: BorderSide(color: Colors.blueGrey[100]!),
                 borderRadius: BorderRadius.circular(15),
               ),
               focusedBorder: OutlineInputBorder(
@@ -327,12 +338,53 @@ class EditProfilState extends State<EditProfil> {
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
                 errorText,
-                style: const TextStyle(
-                  color: Colors.red,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: Colors.red, fontSize: 12),
               ),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderDropdown() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Jenis Kelamin",
+            style: TextStyle(
+              fontSize: 12,
+              color: Color.fromARGB(246, 0, 0, 0),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.blueGrey[50],
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: Colors.blueGrey[100]!),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: DropdownButton<String>(
+              value: _gender,
+              isExpanded: true,
+              underline: const SizedBox(),
+              items: <String>['Laki-laki', 'Perempuan']
+                  .map<DropdownMenuItem<String>>((String value) {
+                return DropdownMenuItem<String>(
+                  value: value,
+                  child: Text(value),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                setState(() {
+                  _gender = newValue;
+                });
+              },
+            ),
+          ),
         ],
       ),
     );
