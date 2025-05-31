@@ -99,10 +99,16 @@ class UsulanProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchRiwayatUsulan() async {
+  String _searchQuery = '';
+  String get searchQuery => _searchQuery;
+
+  // Ubah method fetchRiwayatUsulan
+  Future<void> fetchRiwayatUsulan({String search = ''}) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+
+    _searchQuery = search;
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -114,7 +120,8 @@ class UsulanProvider with ChangeNotifier {
       return;
     }
 
-    final url = Uri.parse(Config.baseUrl('riwayat-usulan'));
+    // Kirim parameter search jika ada
+    final url = Uri.parse(Config.baseUrl('riwayat-usulan') + (search.isNotEmpty ? '?search=$search' : ''));
 
     try {
       final response = await http.get(

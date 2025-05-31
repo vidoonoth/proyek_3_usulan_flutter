@@ -14,6 +14,8 @@ class RiwayatUsulan extends StatefulWidget {
 }
 
 class _RiwayatUsulanState extends State<RiwayatUsulan> {
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -26,6 +28,9 @@ class _RiwayatUsulanState extends State<RiwayatUsulan> {
   Widget build(BuildContext context) {
     final usulanProvider = Provider.of<UsulanProvider>(context);
 
+    // Set controller text sesuai search terakhir
+    _searchController.text = usulanProvider.searchQuery;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: CustomAppBar(),
@@ -37,7 +42,7 @@ class _RiwayatUsulanState extends State<RiwayatUsulan> {
                   await Provider.of<UsulanProvider>(
                     context,
                     listen: false,
-                  ).fetchRiwayatUsulan();
+                  ).fetchRiwayatUsulan(search: _searchController.text);
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -54,6 +59,7 @@ class _RiwayatUsulanState extends State<RiwayatUsulan> {
                               shadowColor: Colors.black26,
                               borderRadius: BorderRadius.circular(12),
                               child: TextField(
+                                controller: _searchController,
                                 decoration: InputDecoration(
                                   hintText: "Cari usulan ...",
                                   prefixIcon: const Icon(Icons.search),
@@ -65,11 +71,19 @@ class _RiwayatUsulanState extends State<RiwayatUsulan> {
                                     borderSide: BorderSide.none,
                                   ),
                                 ),
+                                textInputAction: TextInputAction.search,
                                 onSubmitted: (value) {
                                   Provider.of<UsulanProvider>(
                                     context,
                                     listen: false,
-                                  ).fetchRiwayatUsulan();
+                                  ).fetchRiwayatUsulan(search: value);
+                                },
+                                onChanged: (value) {
+                                  // Optional: pencarian realtime
+                                  // Provider.of<UsulanProvider>(
+                                  //   context,
+                                  //   listen: false,
+                                  // ).fetchRiwayatUsulan(search: value);
                                 },
                               ),
                             ),
