@@ -102,7 +102,42 @@ class UsulanProvider with ChangeNotifier {
   String _searchQuery = '';
   String get searchQuery => _searchQuery;
 
-  // Ubah method fetchRiwayatUsulan
+  // Tambahkan fungsi untuk cache
+  Future<void> loadRiwayatUsulanFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString('riwayat_usulan_cache');
+    if (cached != null) {
+      try {
+        final List<dynamic> usulanList = jsonDecode(cached);
+        _riwayatUsulan = usulanList.map((item) => UsulanModel.fromJson(item)).toList();
+        notifyListeners();
+      } catch (e) {
+        // ignore error, fallback to empty
+      }
+    }
+  }
+
+  Future<void> saveRiwayatUsulanToCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final jsonList = _riwayatUsulan.map((e) => {
+      'id': e.id,
+      'bookTitle': e.bookTitle,
+      'genre': e.genre,
+      'isbn': e.isbn,
+      'author': e.author,
+      'publicationYear': e.publicationYear,
+      'publisher': e.publisher,
+      'date': e.date,
+      'bookImage': e.bookImage,
+      'status': e.status,
+      'user_id': e.userId,
+      'created_at': e.createdAt.toIso8601String(),
+      'updated_at': e.updatedAt.toIso8601String(),
+    }).toList();
+    await prefs.setString('riwayat_usulan_cache', jsonEncode(jsonList));
+  }
+
+  // Ubah fetchRiwayatUsulan agar simpan ke cache setelah fetch sukses
   Future<void> fetchRiwayatUsulan({String search = ''}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -120,7 +155,6 @@ class UsulanProvider with ChangeNotifier {
       return;
     }
 
-    // Kirim parameter search jika ada
     final url = Uri.parse(Config.baseUrl('riwayat-usulan') + (search.isNotEmpty ? '?search=$search' : ''));
 
     try {
@@ -152,6 +186,9 @@ class UsulanProvider with ChangeNotifier {
                 })
                 .whereType<UsulanModel>()
                 .toList();
+
+        // Simpan ke cache
+        await saveRiwayatUsulanToCache();
 
         notifyListeners();
       } else {

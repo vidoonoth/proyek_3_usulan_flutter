@@ -16,9 +16,9 @@ class _BukuScreenState extends State<BukuScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => Provider.of<BookProvider>(context, listen: false).fetchBooks(),
-    );
+    final provider = Provider.of<BookProvider>(context, listen: false);
+    provider.loadBooksFromCache(); // tampilkan cache dulu
+    Future.microtask(() => provider.fetchBooks()); // lalu fetch ke backend
   }
 
   @override

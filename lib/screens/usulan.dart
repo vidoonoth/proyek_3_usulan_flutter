@@ -31,18 +31,27 @@ class _UsulanState extends State<Usulan> {
   File? _selectedImage;
 
   Future<bool> _requestPermission() async {
-    final status = await Permission.photos.request();
-
-    if (!status.isGranted) {
-      print("Permission ditolak");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Izin akses galeri ditolak')),
-      );
-      return false;
+    if (Platform.isAndroid) {
+      if (await Permission.storage.isGranted) return true;
+      final status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Izin akses galeri ditolak')),
+        );
+        return false;
+      }
+      return true;
+    } else if (Platform.isIOS) {
+      final status = await Permission.photos.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Izin akses galeri ditolak')),
+        );
+        return false;
+      }
+      return true;
     }
-
-    print("Permission diberikan");
-    return true;
+    return false;
   }
 
   Widget _buildTextField(
@@ -152,7 +161,8 @@ class _UsulanState extends State<Usulan> {
             children: [
               ElevatedButton(
                 onPressed: () async {
-                  await _requestPermission();
+                  final granted = await _requestPermission();
+                  if (!granted) return;
 
                   try {
                     final picked = await ImagePicker().pickImage(
@@ -252,7 +262,7 @@ class _UsulanState extends State<Usulan> {
                     );
 
                     await usulanProvider.kirimUsulan(
-                      bookTitle: _judulController.text,
+                      bookTitle: _judulController.text.toLowerCase(),
                       genre: _selectedKategori ?? '',
                       isbn: _isbnController.text,
                       author: _pengarangController.text,
@@ -266,15 +276,33 @@ class _UsulanState extends State<Usulan> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Usulan berhasil dikirim!')),
                       );
-                      Navigator.pop(context, true); // beri tanda berhasil
+                      Navigator.pop(context, true);
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            usulanProvider.errorMessage ?? 'Terjadi kesalahan',
+                      // Cek jika error karena duplikat
+                      if ((usulanProvider.errorMessage ?? '').toLowerCase().contains('duplikat') ||
+                          (usulanProvider.errorMessage ?? '').toLowerCase().contains('sudah pernah')) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Peringatan'),
+                            content: const Text('Judul buku sudah pernah diusulkan, tidak boleh duplikasi!'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('OK'),
+                              ),
+                            ],
                           ),
-                        ),
-                      );
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              usulanProvider.errorMessage ?? 'Terjadi kesalahan',
+                            ),
+                          ),
+                        );
+                      }
                     }
                   },
                   child: const Text("Kirim", style: TextStyle(fontSize: 16)),

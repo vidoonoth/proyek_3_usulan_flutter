@@ -38,21 +38,7 @@ class ProfileImagePicker extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (imageUrl != null || selectedImage != null)
-                GestureDetector(
-                  onTap: onRemoveImage,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    padding: EdgeInsets.all(6),
-                    child: Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
+                
               SizedBox(width: 8),
               GestureDetector(
                 onTap: onPickImage,
@@ -65,7 +51,7 @@ class ProfileImagePicker extends StatelessWidget {
                   child: Icon(
                     Icons.camera_alt,
                     color: Color(0xFFF8FAFC),
-                    size: 18,
+                    size: 25,
                   ),
                 ),
               ),

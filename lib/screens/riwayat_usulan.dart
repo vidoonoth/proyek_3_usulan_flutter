@@ -19,7 +19,10 @@ class _RiwayatUsulanState extends State<RiwayatUsulan> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    // Load cache dulu
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Provider.of<UsulanProvider>(context, listen: false).loadRiwayatUsulanFromCache();
+      // Setelah itu fetch ke backend
       Provider.of<UsulanProvider>(context, listen: false).fetchRiwayatUsulan();
     });
   }

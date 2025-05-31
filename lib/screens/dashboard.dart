@@ -12,6 +12,7 @@ import 'package:perpus_flutter/components/app_bar.dart';
 // import 'package:perpus_flutter/components/category_chips.dart';
 import 'package:perpus_flutter/screens/usulan.dart';
 import 'package:perpus_flutter/models/book.dart';
+import 'package:flutter/foundation.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -33,8 +34,7 @@ class DashboardScreenState extends State<DashboardScreen> {
     );
 
     if (response.statusCode == 200) {
-      final List<dynamic> jsonData = json.decode(response.body);
-      return jsonData.map((book) => Book.fromJson(book)).toList();
+      return compute(parseBooks, response.body);
     } else {
       throw Exception(
         'Gagal memuat buku: ${response.statusCode}\n${response.body}',
@@ -42,12 +42,17 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  List<Book> parseBooks(String responseBody) {
+    final List<dynamic> jsonData = json.decode(responseBody);
+    return jsonData.map((book) => Book.fromJson(book)).toList();
+  }
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => Provider.of<BookProvider>(context, listen: false).fetchBooks(),
-    );
+    final provider = Provider.of<BookProvider>(context, listen: false);
+    provider.loadBooksFromCache(); // tampilkan cache dulu
+    Future.microtask(() => provider.fetchBooks()); // lalu fetch ke backend
   }
 
   @override

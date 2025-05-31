@@ -29,11 +29,48 @@ class UserProvider with ChangeNotifier {
     ),
   );
 
+  Future<void> loadUserFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Ambil user_id sebagai int, lalu konversi ke String
+    final intId = prefs.getInt('user_id');
+    id = intId != null ? intId.toString() : null;
+    username = prefs.getString('user_username');
+    name = prefs.getString('user_name');
+    email = prefs.getString('user_email');
+    nik = prefs.getString('user_nik');
+    numberphone = prefs.getString('user_numberphone');
+    gender = prefs.getString('user_gender');
+    joinedAt = prefs.getString('user_joinedAt');
+    profileImage = prefs.getString('user_profileImage');
+    notifyListeners();
+  }
+
+  Future<void> saveUserToCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Simpan user_id sebagai int jika bisa di-parse, jika tidak kosongkan
+    if (id != null && int.tryParse(id!) != null) {
+      await prefs.setInt('user_id', int.parse(id!));
+    } else {
+      await prefs.remove('user_id');
+    }
+    await prefs.setString('user_username', username ?? '');
+    await prefs.setString('user_name', name ?? '');
+    await prefs.setString('user_email', email ?? '');
+    await prefs.setString('user_nik', nik ?? '');
+    await prefs.setString('user_numberphone', numberphone ?? '');
+    await prefs.setString('user_gender', gender ?? '');
+    await prefs.setString('user_joinedAt', joinedAt ?? '');
+    await prefs.setString('user_profileImage', profileImage ?? '');
+  }
+
   Future<void> fetchUserData() async {
     try {
       isLoading = true;
       errorMessage = null;
       notifyListeners();
+
+      // Load cache dulu sebelum fetch
+      await loadUserFromCache();
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
@@ -63,6 +100,8 @@ class UserProvider with ChangeNotifier {
         profileImage = data['profile_image_url'];
         errorMessage = null;
         logger.i('User data fetched successfully');
+        // Simpan ke cache
+        await saveUserToCache();
       } else {
         final errorData = json.decode(response.body);
         errorMessage = errorData['message'] ?? 'Failed to load profile data';

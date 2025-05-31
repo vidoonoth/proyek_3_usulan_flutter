@@ -9,6 +9,14 @@ class UsulanCard extends StatelessWidget {
 
   const UsulanCard({super.key, required this.usulan});
 
+  // Fungsi untuk kapitalisasi setiap kata (mirip aturan KBBI judul)
+  String capitalizeEachWord(String text) {
+    return text.split(' ').map((word) {
+      if (word.isEmpty) return word;
+      return word[0].toUpperCase() + word.substring(1).toLowerCase();
+    }).join(' ');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -89,7 +97,7 @@ class UsulanCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "Judul: ${usulan.bookTitle}",
+                "Judul: ${capitalizeEachWord(usulan.bookTitle)}", // <-- gunakan fungsi di sini
                 style: const TextStyle(fontWeight: FontWeight.bold),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,

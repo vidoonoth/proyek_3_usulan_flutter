@@ -32,142 +32,98 @@ class _ProfilState extends State<Profil> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = Provider.of<UserProvider>(context);
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: CustomAppBar(),
-      body:
-          userProvider.isLoading
-              ? Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Consumer<UserProvider>(
+              builder: (context, userProvider, _) {
+                if (userProvider.isLoading &&
+                    (userProvider.username == null ||
+                        userProvider.username!.isEmpty)) {
+                  return Center(child: CircularProgressIndicator());
+                }
+                return Row(
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.grey[200],
-                          ),
-                          child:
-                              userProvider.profileImage != null
-                                  ? ClipOval(
-                                    child: Image.network(
-                                      userProvider.profileImage!,
-                                      errorBuilder: (
-                                        context,
-                                        error,
-                                        stackTrace,
-                                      ) {
-                                        print('Image load error: $error');
-                                        return Icon(Icons.error);
-                                      },
-                                    ),
-                                  )
-                                  : Icon(
-                                    Icons.person,
-                                    size: 60,
-                                    color: Colors.grey,
-                                  ),
-                        ),
-
-                        SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              userProvider.username ?? '-',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold,
+                    Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey[200],
+                      ),
+                      child:
+                          userProvider.profileImage != null
+                              ? ClipOval(
+                                child: FadeInImage.assetNetwork(
+                                  placeholder: 'assets/avatar_placeholder.png',
+                                  image: userProvider.profileImage!,
+                                  fit: BoxFit.cover,
+                                  imageErrorBuilder:
+                                      (context, error, stackTrace) =>
+                                          Icon(Icons.error),
+                                ),
+                              )
+                              : Icon(
+                                Icons.person,
+                                size: 60,
+                                color: Colors.grey,
                               ),
-                            ),
-                            Text(
-                              "Bergabung pada ${userProvider.joinedAt ?? '-'}",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ],
                     ),
-                    SizedBox(height: 10),
-
-                    // Informasi pengguna
-                    _buildInfoRow("Nama lengkap", userProvider.name ?? '-'),
-                    _buildInfoRow("Email", userProvider.email ?? '-'),
-                    _buildInfoRow("NIK", userProvider.nik ?? '-'),
-                    _buildInfoRow(
-                      "Nomor telepon",
-                      userProvider.numberphone ?? '-',
-                    ),
-                    _buildInfoRow("Jenis kelamin", userProvider.gender ?? '-'),
-                    SizedBox(height: 30),
-
-                    // Tombol edit & keluar
+                    SizedBox(width: 10),
                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Di dalam _ProfilState, ubah tombol edit menjadi:
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => EditProfil(
-                                      userData: {
-                                        'username': userProvider.username,
-                                        'name': userProvider.name,
-                                        'email': userProvider.email,
-                                        'nik': userProvider.nik,
-                                        'numberphone': userProvider.numberphone,
-                                        'gender': userProvider.gender,
-                                      },
-                                    ),
-                              ),
-                            );
-                          },
-                          icon: Icon(Icons.edit, color: Colors.white),
-                          label: Text(
-                            "edit",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            minimumSize: Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                            ),
+                        Text(
+                          userProvider.username ?? '-',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(height: 10),
-                        Text("atau", style: TextStyle(color: Colors.black)),
-                        SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          onPressed: _logout,
-                          icon: Icon(Icons.exit_to_app, color: Colors.white),
-                          label: Text(
-                            "keluar",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            minimumSize: Size(double.infinity, 50),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                            ),
-                          ),
+                        Text(
+                          "Bergabung pada ${userProvider.joinedAt ?? '-'}",
+                          style: TextStyle(color: Colors.grey),
                         ),
                       ],
                     ),
                   ],
-                ),
+                );
+              },
+            ),
+            SizedBox(height: 10),
+            Expanded(
+              child: Consumer<UserProvider>(
+                builder: (context, userProvider, _) {
+                  if (userProvider.isLoading &&
+                      (userProvider.username == null || userProvider.username!.isEmpty)) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  return ListView(
+                    children: [
+                      _buildInfoRow("Nama lengkap", userProvider.name ?? '-'),
+                      _buildInfoRow("Email", userProvider.email ?? '-'),
+                      _buildInfoRow("NIK", userProvider.nik ?? '-'),
+                      _buildInfoRow("Nomor telepon", userProvider.numberphone ?? '-'),
+                      _buildInfoRow("Jenis kelamin", userProvider.gender ?? '-'),
+                      SizedBox(height: 30),
+                      // Pisahkan tombol dari loading
+                      _ActionButtons(
+                        userProvider: userProvider,
+                        logout: _logout,
+                      ),
+                    ],
+                  );
+                },
               ),
+            ),
+          ],
+        ),
+      ),
       bottomNavigationBar: BottomNavComponent(
         selectedIndex: 4,
         onItemTapped: (index) {
@@ -201,6 +157,67 @@ class _ProfilState extends State<Profil> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// Widget tombol aksi dipisah
+class _ActionButtons extends StatelessWidget {
+  final UserProvider userProvider;
+  final VoidCallback logout;
+  const _ActionButtons({required this.userProvider, required this.logout});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => EditProfil(
+                      userData: {
+                        'username': userProvider.username,
+                        'name': userProvider.name,
+                        'email': userProvider.email,
+                        'nik': userProvider.nik,
+                        'numberphone': userProvider.numberphone,
+                        'gender': userProvider.gender,
+                        'profile_image_url': userProvider.profileImage, // <-- Tambahkan ini
+                      },
+                    ),
+              ),
+            );
+          },
+          icon: Icon(Icons.edit, color: Colors.white),
+          label: Text("edit", style: TextStyle(color: Colors.white)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            minimumSize: Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+        ),
+        SizedBox(height: 10),
+        Text("atau", style: TextStyle(color: Colors.black)),
+        SizedBox(height: 10),
+        ElevatedButton.icon(
+          onPressed: logout,
+          icon: Icon(Icons.exit_to_app, color: Colors.white),
+          label: Text("keluar", style: TextStyle(color: Colors.white)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            minimumSize: Size(double.infinity, 50),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(50),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

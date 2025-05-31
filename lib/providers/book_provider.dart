@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:perpus_flutter/config/config.dart';
 import '../models/book.dart';
 import 'package:logger/logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BookProvider with ChangeNotifier {
   List<Book> _books = [];
@@ -31,6 +32,10 @@ class BookProvider with ChangeNotifier {
         final List<dynamic> jsonData = json.decode(response.body);
         _books = jsonData.map((book) => Book.fromJson(book)).toList();
         _errorMessage = null;
+
+        // Simpan ke cache
+        final prefs = await SharedPreferences.getInstance();
+        prefs.setString('cached_books', json.encode(jsonData));
       } else {
         _errorMessage = 'Gagal memuat buku: ${response.statusCode}';
         _books = [];
@@ -40,6 +45,16 @@ class BookProvider with ChangeNotifier {
       _books = [];
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadBooksFromCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString('cached_books');
+    if (cached != null) {
+      final List<dynamic> jsonData = json.decode(cached);
+      _books = jsonData.map((book) => Book.fromJson(book)).toList();
       notifyListeners();
     }
   }

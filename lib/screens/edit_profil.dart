@@ -30,6 +30,10 @@ class EditProfilState extends State<EditProfil> {
   String? _phoneError;
   File? _selectedImage;
 
+  // Tambahkan variabel state
+  bool _removeImage = false;
+  bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
@@ -125,24 +129,19 @@ class EditProfilState extends State<EditProfil> {
     if (_passwordController.text.isNotEmpty)
       updateData['password'] = _passwordController.text;
 
+    setState(() => _isSaving = true);
     bool success;
-
-    // Jika gambar dihapus (ada gambar sebelumnya tapi tidak ada gambar baru yang dipilih)
-    bool shouldRemoveImage =
-        widget.userData['profile_image_url'] != null && _selectedImage == null;
-
-    // Jika ada gambar baru
-    bool hasNewImage = _selectedImage != null;
-
-    if (hasNewImage || shouldRemoveImage) {
+    // Gunakan _removeImage flag
+    if (_selectedImage != null || _removeImage) {
       success = await userProvider.updateProfileWithImage(
         updateData,
         imageFile: _selectedImage,
-        removeImage: shouldRemoveImage,
+        removeImage: _removeImage,
       );
     } else {
       success = await userProvider.updateProfile(updateData);
     }
+    setState(() => _isSaving = false);
 
     if (success) {
       Navigator.pop(context);
@@ -170,6 +169,7 @@ class EditProfilState extends State<EditProfil> {
     if (picked != null) {
       setState(() {
         _selectedImage = File(picked.path);
+        _removeImage = false; // <-- user upload gambar baru, tidak hapus gambar lama
       });
     }
   }
@@ -220,13 +220,30 @@ class EditProfilState extends State<EditProfil> {
             ProfileImagePicker(
               selectedImage: _selectedImage,
               imageUrl: widget.userData['profile_image_url'],
-              onPickImage: _pickImage,
-              onRemoveImage: () {
-                setState(() {
-                  _selectedImage = null;
-                });
-              },
+              onPickImage: _pickImage, onRemoveImage: () {  },
             ),
+            // Tambahkan tombol hapus gambar di bawahnya
+            if (_selectedImage != null || (widget.userData['profile_image_url'] != null && !_removeImage))
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red[600],
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  icon: const Icon(Icons.delete, color: Colors.white),
+                  label: const Text("Hapus Foto Profil"),
+                  onPressed: () {
+                    setState(() {
+                      _selectedImage = null;
+                      _removeImage = true;
+                    });
+                  },
+                ),
+              ),
             const SizedBox(height: 20),
             Expanded(
               child: Container(
@@ -285,7 +302,7 @@ class EditProfilState extends State<EditProfil> {
                         ),
                         const SizedBox(height: 30),
                         ElevatedButton(
-                          onPressed: _saveProfile,
+                          onPressed: _isSaving ? null : _saveProfile,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF60A5FA),
                             padding: const EdgeInsets.symmetric(
@@ -296,10 +313,19 @@ class EditProfilState extends State<EditProfil> {
                               borderRadius: BorderRadius.circular(30),
                             ),
                           ),
-                          child: const Text(
-                            "simpan",
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          child: _isSaving
+                              ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  "simpan",
+                                  style: TextStyle(color: Colors.white),
+                                ),
                         ),
                       ],
                     ),
