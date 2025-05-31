@@ -18,7 +18,7 @@ class UserProvider with ChangeNotifier {
   String? profileImage;
   bool isLoading = true;
   String? errorMessage;
-  
+
   final Logger logger = Logger(
     printer: PrettyPrinter(
       methodCount: 0,
@@ -66,16 +66,18 @@ class UserProvider with ChangeNotifier {
       } else {
         final errorData = json.decode(response.body);
         errorMessage = errorData['message'] ?? 'Failed to load profile data';
-        logger.e('Failed to fetch user data', 
+        logger.e(
+          'Failed to fetch user data',
           error: errorData,
-          stackTrace: StackTrace.current
+          stackTrace: StackTrace.current,
         );
       }
     } catch (e) {
       errorMessage = 'Connection error: ${e.toString()}';
-      logger.e('Exception while fetching user data',
+      logger.e(
+        'Exception while fetching user data',
         error: e,
-        stackTrace: StackTrace.current
+        stackTrace: StackTrace.current,
       );
     } finally {
       isLoading = false;
@@ -93,7 +95,7 @@ class UserProvider with ChangeNotifier {
       final token = prefs.getString('token');
 
       logger.d('Attempting to update profile with data: $data');
-      
+
       // Handle image upload separately if exists
       if (data.containsKey('profileImage')) {
         logger.d('Profile image update detected (not implemented)');
@@ -120,24 +122,27 @@ class UserProvider with ChangeNotifier {
         return true;
       } else {
         final errorData = json.decode(response.body);
-        errorMessage = errorData['message'] ?? 'Update failed: ${response.statusCode}';
-        
-        logger.e('Profile update failed',
+        errorMessage =
+            errorData['message'] ?? 'Update failed: ${response.statusCode}';
+
+        logger.e(
+          'Profile update failed',
           error: {
             'statusCode': response.statusCode,
             'errorData': errorData,
             'sentData': data,
           },
-          stackTrace: StackTrace.current
+          stackTrace: StackTrace.current,
         );
-        
+
         return false;
       }
     } catch (e) {
       errorMessage = 'Connection error: ${e.toString()}';
-      logger.e('Exception during profile update',
+      logger.e(
+        'Exception during profile update',
         error: e,
-        stackTrace: StackTrace.current
+        stackTrace: StackTrace.current,
       );
       return false;
     } finally {
@@ -146,7 +151,11 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfileWithImage(Map<String, dynamic> data, File imageFile) async {
+  Future<bool> updateProfileWithImage(
+    Map<String, dynamic> data, {
+    File? imageFile,
+    bool removeImage = false,
+  }) async {
     try {
       isLoading = true;
       errorMessage = null;
@@ -156,10 +165,10 @@ class UserProvider with ChangeNotifier {
       final token = prefs.getString('token');
 
       var uri = Uri.parse(Config.baseUrl('profile/$id'));
-      var request = http.MultipartRequest('POST', uri); // HARUS POST!
+      var request = http.MultipartRequest('POST', uri);
       request.headers['Authorization'] = 'Bearer $token';
       request.headers['Accept'] = 'application/json';
-      request.fields['_method'] = 'PUT'; // Spoofing agar diterima Laravel
+      request.fields['_method'] = 'PUT';
 
       // Tambahkan field lain
       data.forEach((key, value) {
@@ -168,8 +177,16 @@ class UserProvider with ChangeNotifier {
         }
       });
 
-      // Tambahkan file
-      request.files.add(await http.MultipartFile.fromPath('profileImage', imageFile.path));
+      // Jika ingin menghapus gambar
+      if (removeImage) {
+        request.fields['removeProfileImage'] = 'true';
+      }
+      // Jika ada gambar baru
+      else if (imageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('profileImage', imageFile.path),
+        );
+      }
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
@@ -183,22 +200,25 @@ class UserProvider with ChangeNotifier {
         return true;
       } else {
         final errorData = json.decode(response.body);
-        errorMessage = errorData['message'] ?? 'Update failed: ${response.statusCode}';
-        logger.e('Profile update failed',
+        errorMessage =
+            errorData['message'] ?? 'Update failed: ${response.statusCode}';
+        logger.e(
+          'Profile update failed',
           error: {
             'statusCode': response.statusCode,
             'errorData': errorData,
             'sentData': data,
           },
-          stackTrace: StackTrace.current
+          stackTrace: StackTrace.current,
         );
         return false;
       }
     } catch (e) {
       errorMessage = 'Connection error: ${e.toString()}';
-      logger.e('Exception during profile update',
+      logger.e(
+        'Exception during profile update',
         error: e,
-        stackTrace: StackTrace.current
+        stackTrace: StackTrace.current,
       );
       return false;
     } finally {

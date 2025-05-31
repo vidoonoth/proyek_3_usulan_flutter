@@ -3,6 +3,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:perpus_flutter/providers/user_provider.dart';
+import 'package:perpus_flutter/widgets/custom_text_field.dart';
+import 'package:perpus_flutter/widgets/custom_text_field_validation.dart';
+import 'package:perpus_flutter/widgets/gender_dropdown.dart';
+import 'package:perpus_flutter/widgets/profile_image_picker.dart';
 
 class EditProfil extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -108,17 +112,34 @@ class EditProfilState extends State<EditProfil> {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
 
     final updateData = <String, dynamic>{};
-    if (_usernameController.text.isNotEmpty) updateData['username'] = _usernameController.text;
-    if (_nameController.text.isNotEmpty) updateData['name'] = _nameController.text;
-    if (_emailController.text.isNotEmpty) updateData['email'] = _emailController.text;
+    if (_usernameController.text.isNotEmpty)
+      updateData['username'] = _usernameController.text;
+    if (_nameController.text.isNotEmpty)
+      updateData['name'] = _nameController.text;
+    if (_emailController.text.isNotEmpty)
+      updateData['email'] = _emailController.text;
     if (_nikController.text.isNotEmpty) updateData['nik'] = _nikController.text;
-    if (_phoneController.text.isNotEmpty) updateData['numberphone'] = _phoneController.text;
+    if (_phoneController.text.isNotEmpty)
+      updateData['numberphone'] = _phoneController.text;
     if (_gender != null && _gender!.isNotEmpty) updateData['gender'] = _gender;
-    if (_passwordController.text.isNotEmpty) updateData['password'] = _passwordController.text;
+    if (_passwordController.text.isNotEmpty)
+      updateData['password'] = _passwordController.text;
 
     bool success;
-    if (_selectedImage != null) {
-      success = await userProvider.updateProfileWithImage(updateData, _selectedImage!);
+
+    // Jika gambar dihapus (ada gambar sebelumnya tapi tidak ada gambar baru yang dipilih)
+    bool shouldRemoveImage =
+        widget.userData['profile_image_url'] != null && _selectedImage == null;
+
+    // Jika ada gambar baru
+    bool hasNewImage = _selectedImage != null;
+
+    if (hasNewImage || shouldRemoveImage) {
+      success = await userProvider.updateProfileWithImage(
+        updateData,
+        imageFile: _selectedImage,
+        removeImage: shouldRemoveImage,
+      );
     } else {
       success = await userProvider.updateProfile(updateData);
     }
@@ -133,8 +154,10 @@ class EditProfilState extends State<EditProfil> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal memperbarui profil'),
+        SnackBar(
+          content: Text(
+            userProvider.errorMessage ?? 'Gagal memperbarui profil',
+          ),
           backgroundColor: Colors.red,
         ),
       );
@@ -194,47 +217,17 @@ class EditProfilState extends State<EditProfil> {
                 ],
               ),
             ),
-
-            // Foto Profil
-            Stack(
-              alignment: Alignment.bottomRight,
-              children: [
-                CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.grey,
-                  backgroundImage: _selectedImage != null
-                      ? FileImage(_selectedImage!)
-                      : (widget.userData['profile_image_url'] != null
-                          ? NetworkImage(widget.userData['profile_image_url'])
-                          : null) as ImageProvider?,
-                  child: (_selectedImage == null && widget.userData['profile_image_url'] == null)
-                      ? Icon(Icons.person, size: 60, color: Colors.white)
-                      : null,
-                ),
-                Positioned(
-                  bottom: 4,
-                  right: 4,
-                  child: GestureDetector(
-                    onTap: _pickImage,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF60A5FA),
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(6),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Color(0xFFF8FAFC),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            ProfileImagePicker(
+              selectedImage: _selectedImage,
+              imageUrl: widget.userData['profile_image_url'],
+              onPickImage: _pickImage,
+              onRemoveImage: () {
+                setState(() {
+                  _selectedImage = null;
+                });
+              },
             ),
-
             const SizedBox(height: 20),
-
-            // Form Scrollable
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
@@ -251,27 +244,43 @@ class EditProfilState extends State<EditProfil> {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        _buildTextField("Username", _usernameController),
-                        _buildTextField("Nama lengkap", _nameController),
-                        _buildTextField("Email", _emailController),
-                        _buildTextFieldWithValidation(
-                          "NIK",
-                          _nikController,
+                        CustomTextField(
+                          label: "Username",
+                          controller: _usernameController,
+                        ),
+                        CustomTextField(
+                          label: "Nama lengkap",
+                          controller: _nameController,
+                        ),
+                        CustomTextField(
+                          label: "Email",
+                          controller: _emailController,
+                        ),
+                        CustomTextFieldValidation(
+                          label: "NIK",
+                          controller: _nikController,
                           errorText: _nikError,
                           maxLength: 16,
                           keyboardType: TextInputType.number,
                         ),
-                        _buildTextFieldWithValidation(
-                          "Nomor telepon",
-                          _phoneController,
+                        CustomTextFieldValidation(
+                          label: "Nomor telepon",
+                          controller: _phoneController,
                           errorText: _phoneError,
                           maxLength: 13,
                           keyboardType: TextInputType.phone,
                         ),
-                        _buildGenderDropdown(),
-                        _buildTextField(
-                          "Password (kosongkan jika tidak ingin mengubah)",
-                          _passwordController,
+                        GenderDropdown(
+                          value: _gender,
+                          onChanged: (val) {
+                            setState(() {
+                              _gender = val;
+                            });
+                          },
+                        ),
+                        CustomTextField(
+                          label: "Password (kosongkan jika tidak ingin mengubah)",
+                          controller: _passwordController,
                           isPassword: true,
                         ),
                         const SizedBox(height: 30),
@@ -300,123 +309,6 @@ class EditProfilState extends State<EditProfil> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    bool isPassword = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: TextField(
-        controller: controller,
-        obscureText: isPassword,
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Color.fromARGB(246, 0, 0, 0)),
-          filled: true,
-          fillColor: Colors.blueGrey[50],
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blueGrey[100]!),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blueGrey[200]!),
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextFieldWithValidation(
-    String label,
-    TextEditingController controller, {
-    String? errorText,
-    int? maxLength,
-    TextInputType? keyboardType,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: controller,
-            maxLength: maxLength,
-            keyboardType: keyboardType,
-            decoration: InputDecoration(
-              labelText: label,
-              labelStyle: const TextStyle(color: Color.fromARGB(246, 0, 0, 0)),
-              filled: true,
-              fillColor: Colors.blueGrey[50],
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.blueGrey[100]!),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Colors.blueGrey[200]!),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              errorText: errorText,
-            ),
-          ),
-          if (errorText != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 4.0),
-              child: Text(
-                errorText,
-                style: const TextStyle(color: Colors.red, fontSize: 12),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGenderDropdown() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Jenis Kelamin",
-            style: TextStyle(
-              fontSize: 12,
-              color: Color.fromARGB(246, 0, 0, 0),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.blueGrey[50],
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.blueGrey[100]!),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: DropdownButton<String>(
-              value: _gender,
-              isExpanded: true,
-              underline: const SizedBox(),
-              items: <String>['Laki-laki', 'Perempuan']
-                  .map<DropdownMenuItem<String>>((String value) {
-                return DropdownMenuItem<String>(
-                  value: value,
-                  child: Text(value),
-                );
-              }).toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _gender = newValue;
-                });
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
